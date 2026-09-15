@@ -2723,7 +2723,7 @@ document.addEventListener('visibilitychange',mrainSync);
  * Baked-in defaults so every visitor to the team site is connected
  * without touching any settings. Put your Render service URL here.
  * A device's own Squad settings still override these if set. */
-var TEAM_API='https://slayers-api.onrender.com';
+var TEAM_API='https://ubaslayers.onrender.com';
 var TEAM_ID='slayers';
 /* ========================================================== */
 /* ============ SLAYERS TEAM LINKS — EDIT HERE ============
@@ -3048,7 +3048,7 @@ function sqSetupHTML(){
   return '<div class="vhead"><div class="ey">Slayers \u00b7 Squad</div><h1>Team setup</h1>'
     +'<p>Connect to your team\u2019s scoreboard. Paste the server link your captain set up \u2014 viewing needs just the link; posting needs the team code.</p></div>'
     +'<div class="card-box sq-setup">'
-    +'<label class="fld"><span class="k">Server link</span><input type="text" id="sq-cfg-api" placeholder="https://slayers-api.onrender.com" value="'+esc(c.api||'')+'"></label>'
+    +'<label class="fld"><span class="k">Server link</span><input type="text" id="sq-cfg-api" placeholder="https://ubaslayers.onrender.com" value="'+esc(c.api||'')+'"></label>'
     +'<label class="fld"><span class="k">Team ID</span><input type="text" id="sq-cfg-team" placeholder="slayers" value="'+esc(c.team||'slayers')+'"></label>'
     +'<label class="fld"><span class="k">Post code <span style="opacity:.6">(only to add/post)</span></span><input type="text" id="sq-cfg-code" placeholder="team code" value="'+esc(c.code||'')+'"></label>'
     +'<button class="btn gold" id="sq-setup-save">Connect</button></div>';
@@ -5095,7 +5095,7 @@ function renderCloud(){
   var c=csCfg(), h='';
   if(!c.key){
     h+='<div class="cs-setup">'
-      +'<label class="fld"><span class="k">Server link</span><input type="text" id="cs-api" placeholder="https://slayers-api.onrender.com" value="'+esc(c.api||sqCfg().api||'')+'"></label>'
+      +'<label class="fld"><span class="k">Server link</span><input type="text" id="cs-api" placeholder="https://ubaslayers.onrender.com" value="'+esc(c.api||sqCfg().api||'')+'"></label>'
       +'<label class="fld"><span class="k">Your name (optional)</span><input type="text" id="cs-name" maxlength="40" placeholder="shows on your backup"></label>'
       +'<button class="btn gold" onclick="csRegister()">Turn on \u2014 create my key</button>'
       +'<div class="cs-or">already have a key from another device?</div>'
