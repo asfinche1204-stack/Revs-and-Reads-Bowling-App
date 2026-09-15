@@ -149,21 +149,25 @@ app.get('/api/team/:id/avail', async (req, res) => {
   } catch (e) { res.status(500).json({ error: String(e.message || e) }); }
 });
 
-app.post('/api/team/:id/avail', requireCode, async (req, res) => {
+/* availability is open to the team — no post code (per captain's call): tapping
+ * "I'm in" should have zero friction. Score/match writes stay code-gated. */
+app.post('/api/team/:id/avail', async (req, res) => {
+  /* deliberately NOT code-gated: an availability answer shouldn't need the team post code */
   try {
     const { event_key, name, status } = req.body || {};
     const nm = String(name || '').trim().slice(0, 40);
-    if (!event_key || !nm) return res.status(400).json({ error: 'event_key and name required' });
+    const ek = String(event_key || '').slice(0, 80);
+    if (!ek || !nm) return res.status(400).json({ error: 'event_key and name required' });
     if (status === 'clear') {
       await pool.query('delete from team_avail where team_id=$1 and event_key=$2 and lower(name)=lower($3)',
-        [req.params.id, event_key, nm]);
+        [req.params.id, ek, nm]);
       return res.json({ ok: true, cleared: true });
     }
     if (status !== 'yes' && status !== 'no') return res.status(400).json({ error: 'status must be yes, no, or clear' });
     await pool.query(
       'insert into team_avail (team_id, event_key, name, status) values ($1,$2,$3,$4) ' +
       'on conflict (team_id, event_key, lower(name)) do update set status=excluded.status, name=excluded.name, updated_at=now()',
-      [req.params.id, event_key, nm, status]);
+      [req.params.id, ek, nm, status]);
     res.json({ ok: true });
   } catch (e) { res.status(500).json({ error: String(e.message || e) }); }
 });

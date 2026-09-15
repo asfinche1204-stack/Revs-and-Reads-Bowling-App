@@ -2746,7 +2746,7 @@ var TEAM_SCHEDULE=[
 var AV={rows:null, loading:false, name:''};
 try{ AV.name=localStorage.getItem('rr_av_name')||''; }catch(_){ }
 function avKey(e){ return e.start+'_'+(e.name||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,''); }
-function avReady(){ var c=sqCfg(); return !!(c.api&&c.code); }
+function avReady(){ var c=sqCfg(); return !!c.api; }
 function avLoad(){
   if(AV.loading||!sqCfg().api)return;
   AV.loading=true;
@@ -2764,7 +2764,7 @@ function avFor(key){
 function avSet(key,status){
   var nm=(AV.name||'').trim();
   if(!nm){ toast('Enter your name first'); return; }
-  if(!avReady()){ toast('Set the Squad server + post code on the Squad tab'); return; }
+  if(!avReady()){ toast('Set the Squad server link on the Squad tab'); return; }
   var cur=avFor(key).mine, send=(cur===status)?'clear':status;
   AV.rows=(AV.rows||[]).filter(function(r){ return !(r.event_key===key&&(r.name||'').trim().toLowerCase()===nm.toLowerCase()); });
   if(send!=='clear')AV.rows.push({event_key:key,name:nm,status:send});
