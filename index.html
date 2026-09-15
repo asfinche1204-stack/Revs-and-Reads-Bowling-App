@@ -547,6 +547,7 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
 .av-btot td{font-family:'Space Mono',monospace;font-size:9.5px;color:var(--gold)}
 .ts-share{display:flex;gap:8px;margin-top:10px}
 .ts-share .lg-q{flex:1}
+.ts-gcal{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}
 .fr-launch{padding:0 16px;margin:10px 0 2px}
 .fr-launch .btn{width:100%}
 .fr-cam{border-radius:12px;overflow:hidden;border:1px solid var(--line);margin-top:10px;background:#000}
@@ -2830,8 +2831,29 @@ function tsShareText(evs){
     var st=tsMyStatus(e);
     lines.push('\u2022 '+W[d.getDay()]+' '+M[d.getMonth()]+' '+d.getDate()+' \u2014 '+e.name+' @ '+(e.house||'')+(e.city?(' ('+e.city+')'):'')+(st&&who?(' \u2014 '+who+': '+st):''));
   });
+  lines.push('');
+  lines.push('Tap to add to Google Calendar:');
+  evs.forEach(function(x){ var nm=((x.e.name||'').split('\u00b7')[0]||'').trim()||x.e.start; lines.push(nm+': '+tsGcalUrl(x.e)); });
+  lines.push('');
   lines.push('Full schedule + RSVPs: https://ubaslayers.com');
   return lines.join('\n');
+}
+function tsGcalUrl(e){
+  var d=e.start.replace(/-/g,''), h=tsParseHour(e.name);
+  var hh=(h<10?'0':'')+h, he=((h+4)<10?'0':'')+(h+4);
+  var st=tsMyStatus(e), who=(AV.name||'').trim();
+  var details='UBA Southeast Capital tour stop.'+(st&&who?(' '+who+' is marked '+st+'.'):'')+' Details: https://ubaslayers.com';
+  return 'https://calendar.google.com/calendar/render?action=TEMPLATE'
+    +'&text='+encodeURIComponent('UBA \u00b7 Slayers \u00b7 '+e.name)
+    +'&dates='+d+'T'+hh+'0000/'+d+'T'+he+'0000'
+    +'&location='+encodeURIComponent((e.house?e.house+', ':'')+(e.city||''))
+    +'&details='+encodeURIComponent(details);
+}
+function tsGcalList(evs){
+  return '<div class="ts-gcal">'+evs.map(function(x){
+    var nm=((x.e.name||'').split('\u00b7')[0]||'').trim()||x.e.start;
+    return '<a class="tb-lk" href="'+esc(tsGcalUrl(x.e))+'" target="_blank" rel="noopener">'+esc(nm)+' \u2192 add</a>';
+  }).join('')+'</div>';
 }
 function tsShareCal(){
   var up=tsUpcoming(); if(!up.length){ toast('No upcoming events to share'); return; }
@@ -2925,7 +2947,8 @@ function teamSchedSync(){
   } else {
     h+='<label class="fld av-namefld"><span class="k">Your name (for availability)</span><input type="text" id="av-name" maxlength="40" placeholder="so the captain knows who\u2019s in" value="'+esc(AV.name)+'"></label>';
     h+='<div class="ts-list">'+up.map(function(x){return row(x,false)+avBlock(avKey(x.e));}).join('')+'</div>';
-    h+='<div class="ts-share"><button class="lg-q" onclick="tsShareCal()">\ud83d\udcc5 Add to calendar (.ics)</button><button class="lg-q" onclick="tsShareTxt()">\ud83d\udce4 Share schedule</button></div>';
+    h+='<div class="ts-share"><button class="lg-q'+(window.TS_GCAL?' big':'')+'" onclick="window.TS_GCAL=!window.TS_GCAL;teamSchedSync()">\ud83d\uddd3 Google Calendar</button><button class="lg-q" onclick="tsShareCal()">\ud83d\udcc5 .ics file</button><button class="lg-q" onclick="tsShareTxt()">\ud83d\udce4 Share</button></div>';
+    if(window.TS_GCAL)h+=tsGcalList(up);
     h+=avBoard(up);
     if(AV.rows===null&&sqCfg().api)avLoad();
   }
