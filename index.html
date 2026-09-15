@@ -545,6 +545,8 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
 .av-bc.y{color:var(--green,#00E68A);font-weight:700}
 .av-bc.n{color:#ff6b6b;font-weight:700}
 .av-btot td{font-family:'Space Mono',monospace;font-size:9.5px;color:var(--gold)}
+.ts-share{display:flex;gap:8px;margin-top:10px}
+.ts-share .lg-q{flex:1}
 .fr-launch{padding:0 16px;margin:10px 0 2px}
 .fr-launch .btn{width:100%}
 .fr-cam{border-radius:12px;overflow:hidden;border:1px solid var(--line);margin-top:10px;background:#000}
@@ -2792,6 +2794,70 @@ function avSet(key,status){
     .catch(function(err){ toast(String(err.message||err)); avLoad(); });
 }
 function avName(v){ AV.name=v; try{ localStorage.setItem('rr_av_name',v); }catch(_){ } }
+/* ---- schedule sharing: .ics calendar file + share text (for the family calendar) ---- */
+function tsParseHour(name){
+  var m=/(\d{1,2})\s*(AM|PM)/i.exec(name||''); if(!m)return 10;
+  var h=(+m[1])%12; if(/pm/i.test(m[2]))h+=12; return h;
+}
+function tsIcsEsc(x){ return String(x==null?'':x).replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\n/g,'\\n'); }
+function tsMyStatus(e){ var a=avFor(avKey(e)); return a.mine==='yes'?'IN':(a.mine==='no'?'OUT':null); }
+function tsIcs(evs){
+  var L=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Slayers//Revs and Reads//EN','CALSCALE:GREGORIAN','METHOD:PUBLISH'];
+  evs.forEach(function(x){
+    var e=x.e, d=e.start.replace(/-/g,''), h=tsParseHour(e.name), hh=(h<10?'0':'')+h;
+    var st=tsMyStatus(e), who=(AV.name||'').trim();
+    var desc='UBA Southeast Capital tour stop.'+(st&&who?(' '+who+' is marked '+st+'.'):'')+' Details: https://ubaslayers.com';
+    L.push('BEGIN:VEVENT');
+    L.push('UID:'+avKey(e)+'@ubaslayers.com');
+    L.push('DTSTAMP:'+d+'T000000Z');
+    L.push('DTSTART:'+d+'T'+hh+'0000');
+    L.push('DTEND:'+d+'T'+((h+4<10?'0':'')+(h+4))+'0000');
+    L.push('SUMMARY:'+tsIcsEsc('UBA \u00b7 Slayers \u00b7 '+e.name));
+    L.push('LOCATION:'+tsIcsEsc((e.house?e.house+', ':'')+(e.city||'')));
+    L.push('DESCRIPTION:'+tsIcsEsc(desc));
+    L.push('END:VEVENT');
+  });
+  L.push('END:VCALENDAR');
+  return L.join('\r\n')+'\r\n';
+}
+function tsShareText(evs){
+  var who=(AV.name||'').trim();
+  var lines=['Slayers \u2014 UBA SE Capital schedule:'];
+  evs.forEach(function(x){
+    var e=x.e, d=new Date(e.start+'T00:00:00');
+    var M=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    var W=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    var st=tsMyStatus(e);
+    lines.push('\u2022 '+W[d.getDay()]+' '+M[d.getMonth()]+' '+d.getDate()+' \u2014 '+e.name+' @ '+(e.house||'')+(e.city?(' ('+e.city+')'):'')+(st&&who?(' \u2014 '+who+': '+st):''));
+  });
+  lines.push('Full schedule + RSVPs: https://ubaslayers.com');
+  return lines.join('\n');
+}
+function tsShareCal(){
+  var up=tsUpcoming(); if(!up.length){ toast('No upcoming events to share'); return; }
+  var ics=tsIcs(up), blob=new Blob([ics],{type:'text/calendar'});
+  var file=null; try{ file=new File([blob],'slayers-schedule.ics',{type:'text/calendar'}); }catch(_){ }
+  if(file&&navigator.canShare&&navigator.canShare({files:[file]})&&navigator.share){
+    navigator.share({files:[file],title:'Slayers schedule'}).catch(function(){});
+    return;
+  }
+  var u=URL.createObjectURL(blob), a2=document.createElement('a');
+  a2.href=u; a2.download='slayers-schedule.ics'; document.body.appendChild(a2); a2.click();
+  setTimeout(function(){ document.body.removeChild(a2); URL.revokeObjectURL(u); },400);
+  toast('Calendar file downloaded \u2014 open it to add the stops');
+}
+function tsShareTxt(){
+  var up=tsUpcoming(); if(!up.length){ toast('No upcoming events to share'); return; }
+  var txt=tsShareText(up);
+  if(navigator.share){ navigator.share({title:'Slayers schedule',text:txt}).catch(function(){}); return; }
+  try{ navigator.clipboard.writeText(txt).then(function(){ toast('Schedule copied \u2014 paste it anywhere'); }); }
+  catch(_){ toast('Couldn\u2019t open share \u2014 long-press to copy from the card'); }
+}
+function tsUpcoming(){
+  var now=new Date(); now.setHours(0,0,0,0);
+  return TEAM_SCHEDULE.map(function(e){ var sd=new Date(e.start+'T00:00:00'), ed=new Date((e.end||e.start)+'T23:59:59'); return {e:e,sd:sd,ed:ed}; })
+    .sort(function(a,b){return a.sd-b.sd;}).filter(function(x){return x.ed>=now;});
+}
 function avBoard(evs){
   var rows=AV.rows||[]; if(!rows.length||!evs.length)return '';
   var keys=evs.map(function(x){return avKey(x.e);});
@@ -2859,6 +2925,7 @@ function teamSchedSync(){
   } else {
     h+='<label class="fld av-namefld"><span class="k">Your name (for availability)</span><input type="text" id="av-name" maxlength="40" placeholder="so the captain knows who\u2019s in" value="'+esc(AV.name)+'"></label>';
     h+='<div class="ts-list">'+up.map(function(x){return row(x,false)+avBlock(avKey(x.e));}).join('')+'</div>';
+    h+='<div class="ts-share"><button class="lg-q" onclick="tsShareCal()">\ud83d\udcc5 Add to calendar (.ics)</button><button class="lg-q" onclick="tsShareTxt()">\ud83d\udce4 Share schedule</button></div>';
     h+=avBoard(up);
     if(AV.rows===null&&sqCfg().api)avLoad();
   }
