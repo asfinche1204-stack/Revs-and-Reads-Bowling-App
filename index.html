@@ -533,6 +533,18 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
 .av-ln{font-size:11.5px;color:var(--txt);margin-top:4px;line-height:1.4}
 .av-ln b{color:var(--txt-dim);font-weight:700}
 .av-none{margin-top:7px;font-size:10.5px;color:var(--txt-dim)}
+.av-board{margin-top:12px}
+.av-board summary{cursor:pointer;list-style:none;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.1em;color:var(--gold);text-transform:uppercase}
+.av-board summary::-webkit-details-marker{display:none}
+.av-bwrap{overflow-x:auto;margin-top:7px}
+.av-btab{border-collapse:collapse;width:100%;font-size:11.5px}
+.av-btab th{font-family:'Space Mono',monospace;font-size:8.5px;color:var(--txt-dim);text-align:center;padding:3px 6px;letter-spacing:.04em}
+.av-btab th span{display:block;font-size:8px;color:var(--txt-dim);opacity:.7}
+.av-btab td{border-top:1px solid var(--line);padding:5px 6px;text-align:center}
+.av-bn{text-align:left!important;color:var(--txt);white-space:nowrap;max-width:110px;overflow:hidden;text-overflow:ellipsis}
+.av-bc.y{color:var(--green,#00E68A);font-weight:700}
+.av-bc.n{color:#ff6b6b;font-weight:700}
+.av-btot td{font-family:'Space Mono',monospace;font-size:9.5px;color:var(--gold)}
 .fr-launch{padding:0 16px;margin:10px 0 2px}
 .fr-launch .btn{width:100%}
 .fr-cam{border-radius:12px;overflow:hidden;border:1px solid var(--line);margin-top:10px;background:#000}
@@ -2707,6 +2719,13 @@ function mrainSync(){
 }
 window.addEventListener('resize',function(){ if(MR.on)mrainResize(); });
 document.addEventListener('visibilitychange',mrainSync);
+/* ============ SLAYERS TEAM SERVER — EDIT HERE ============
+ * Baked-in defaults so every visitor to the team site is connected
+ * without touching any settings. Put your Render service URL here.
+ * A device's own Squad settings still override these if set. */
+var TEAM_API='https://slayers-api.onrender.com';
+var TEAM_ID='slayers';
+/* ========================================================== */
 /* ============ SLAYERS TEAM LINKS — EDIT HERE ============
  * Shown as a links bar under the header whenever the Slayers v2 theme is on
  * (i.e. always, on the ubaslayers.com team site). Entries with an empty url
@@ -2773,6 +2792,32 @@ function avSet(key,status){
     .catch(function(err){ toast(String(err.message||err)); avLoad(); });
 }
 function avName(v){ AV.name=v; try{ localStorage.setItem('rr_av_name',v); }catch(_){ } }
+function avBoard(evs){
+  var rows=AV.rows||[]; if(!rows.length||!evs.length)return '';
+  var keys=evs.map(function(x){return avKey(x.e);});
+  var names={}, i;
+  rows.forEach(function(r){ if(keys.indexOf(r.event_key)>=0){ var k=(r.name||'').trim(); if(k&&!names[k.toLowerCase()])names[k.toLowerCase()]=k; } });
+  var list=Object.keys(names).sort().map(function(k){return names[k];});
+  if(!list.length)return '';
+  var h='<details class="av-board" open><summary>Team availability board</summary><div class="av-bwrap"><table class="av-btab"><tr><th></th>';
+  evs.forEach(function(x,i2){ h+='<th>Stop '+(i2+1)+'<span>'+esc((x.e.start||'').slice(5).replace('-','/'))+'</span></th>'; });
+  h+='</tr>';
+  list.forEach(function(nm){
+    h+='<tr><td class="av-bn">'+esc(nm)+'</td>';
+    keys.forEach(function(k){
+      var st=null; rows.forEach(function(r){ if(r.event_key===k&&(r.name||'').trim().toLowerCase()===nm.toLowerCase())st=r.status; });
+      h+='<td class="av-bc '+(st==='yes'?'y':(st==='no'?'n':''))+'">'+(st==='yes'?'\u2713':(st==='no'?'\u2717':'\u2014'))+'</td>';
+    });
+    h+='</tr>';
+  });
+  var tot='<tr class="av-btot"><td class="av-bn">In / answered</td>';
+  keys.forEach(function(k){
+    var y=0,n=0; rows.forEach(function(r){ if(r.event_key===k){ if(r.status==='yes')y++; else if(r.status==='no')n++; } });
+    tot+='<td>'+y+'/'+(y+n)+'</td>';
+  });
+  h+=tot+'</tr></table></div></details>';
+  return h;
+}
 function avBlock(key){
   var a=avFor(key);
   var h='<div class="av-wrap">';
@@ -2814,6 +2859,7 @@ function teamSchedSync(){
   } else {
     h+='<label class="fld av-namefld"><span class="k">Your name (for availability)</span><input type="text" id="av-name" maxlength="40" placeholder="so the captain knows who\u2019s in" value="'+esc(AV.name)+'"></label>';
     h+='<div class="ts-list">'+up.map(function(x){return row(x,false)+avBlock(avKey(x.e));}).join('')+'</div>';
+    h+=avBoard(up);
     if(AV.rows===null&&sqCfg().api)avLoad();
   }
   if(past.length){
@@ -2839,7 +2885,12 @@ setTheme(localStorage.getItem('rr_theme'));
 
 /* ===================== Slayers Squad (live team roster + stats) ===================== */
 var SQ={team:null,bowlers:[],sessions:[],loadedAt:0,err:'',panel:null,expand:null,entry:null,house:'',lineup:null,matches:[],matchdraft:null,_init:false};
-function sqCfg(){try{return JSON.parse(localStorage.getItem('rr_squad_cfg')||'{}');}catch(_){return {};}}
+function sqCfg(){
+  var c={}; try{ c=JSON.parse(localStorage.getItem('rr_squad_cfg')||'{}'); }catch(_){ c={}; }
+  if(!c.api&&typeof TEAM_API!=='undefined'&&TEAM_API)c.api=TEAM_API;
+  if(!c.team&&typeof TEAM_ID!=='undefined'&&TEAM_ID)c.team=TEAM_ID;
+  return c;
+}
 function sqSaveCfg(c){try{localStorage.setItem('rr_squad_cfg',JSON.stringify(c));}catch(_){}}
 function sqUrl(path){var c=sqCfg();return (c.api||'').replace(/\/+$/,'')+'/api/team/'+encodeURIComponent(c.team||'slayers')+path;}
 function sqCacheKey(){return 'rr_squad_data_'+((sqCfg().team)||'slayers');}

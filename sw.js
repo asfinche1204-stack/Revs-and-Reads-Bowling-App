@@ -1,5 +1,5 @@
 /* Revs & Reads service worker — network-first shell, cache as offline fallback */
-var CACHE='slayers-cache-v16';
+var CACHE='slayers-cache-v17';
 var CORE=['./','./index.html','./manifest.webmanifest'];
 self.addEventListener('install',function(e){
   /* best-effort precache: a missing asset must NOT fail install, or the old worker never steps aside */
