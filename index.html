@@ -2800,7 +2800,7 @@ function avBoard(evs){
   var list=Object.keys(names).sort().map(function(k){return names[k];});
   if(!list.length)return '';
   var h='<details class="av-board" open><summary>Team availability board</summary><div class="av-bwrap"><table class="av-btab"><tr><th></th>';
-  evs.forEach(function(x,i2){ h+='<th>Stop '+(i2+1)+'<span>'+esc((x.e.start||'').slice(5).replace('-','/'))+'</span></th>'; });
+  evs.forEach(function(x,i2){ var lb=((x.e.name||'').split('\u00b7')[0]||'').trim()||('Event '+(i2+1)); h+='<th>'+esc(lb)+'<span>'+esc((x.e.start||'').slice(5).replace('-','/'))+'</span></th>'; });
   h+='</tr>';
   list.forEach(function(nm){
     h+='<tr><td class="av-bn">'+esc(nm)+'</td>';
