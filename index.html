@@ -183,7 +183,13 @@ body{min-height:100dvh;overflow-x:hidden}
   .st-goalset input{-moz-appearance:textfield;appearance:textfield}
   .lg-meta{display:flex;gap:6px;margin-bottom:10px}
   .lg-meta input,.lg-meta select{flex:1;min-width:0;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:7px;color:var(--txt);font-size:12px}
-  .lg-track{display:flex;gap:2px;margin-bottom:10px;overflow-x:auto}
+  .lg-line{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:2px 0 8px}
+.lg-line label{font-family:'Space Mono',monospace;font-size:10px;color:var(--mut);display:flex;align-items:center;gap:5px}
+.lg-line input{width:64px;font:inherit;font-size:16px;color:var(--ink);background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.16);border-radius:8px;padding:5px 7px;text-align:center}
+.lg-lhint{font-size:9px;color:var(--mut);font-style:italic}
+.lg-moves{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 2px}
+.lg-mv{font-family:'Space Mono',monospace;font-size:9px;color:var(--gold);border:1px solid rgba(232,184,75,.3);border-radius:8px;padding:2px 7px;background:rgba(232,184,75,.06)}
+.lg-track{display:flex;gap:2px;margin-bottom:10px;overflow-x:auto}
   .lg-fr{flex:1;min-width:24px;text-align:center;border:1px solid var(--line);border-radius:5px;padding:2px 0}
   .lg-fr.cur{border-color:var(--gold);background:var(--panel2)}
   .lg-fn{font-size:8px;color:var(--txt-dim)}
@@ -548,6 +554,32 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
 .ts-share{display:flex;gap:8px;margin-top:10px}
 .ts-share .lg-q{flex:1}
 .ts-gcal{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}
+.ts-res{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.06em;padding:2px 7px;border-radius:8px;border:1px solid;white-space:nowrap}
+.ts-res.w{color:#27d87c;border-color:rgba(39,216,124,.45);background:rgba(39,216,124,.08)}
+.ts-res.l{color:#ff6b6b;border-color:rgba(255,107,107,.45);background:rgba(255,107,107,.08)}
+.tm-views{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 10px}
+.tm-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tm-t{width:100%;border-collapse:collapse;font-family:'Space Mono',monospace;font-size:10px;white-space:nowrap}
+.tm-t th{text-align:right;font-size:8.5px;letter-spacing:.08em;color:var(--mut);padding:4px 7px;border-bottom:1px solid rgba(255,255,255,.12)}
+.tm-t th:first-child,.tm-t td:first-child{text-align:left}
+.tm-t td{text-align:right;padding:4px 7px;border-bottom:1px solid rgba(255,255,255,.05);color:var(--ink)}
+.tm-t tr.tm-tot td{color:var(--gold);border-top:1px solid rgba(255,255,255,.14)}
+.tm-t tr.tm-opp td{color:var(--mut)}
+.tm-up{color:#27d87c}.tm-dn{color:#ff6b6b}.tm-ev{color:var(--mut)}
+.tm-match{border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:10px 12px;margin-top:8px;background:rgba(255,255,255,.02)}
+.tm-mh{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.tm-mh b{font-size:13px}
+.tm-mh .ts-meta{font-size:10px;color:var(--mut)}
+.tm-sq{margin-top:7px}
+.tm-sq summary{cursor:pointer;font-family:'Space Mono',monospace;font-size:10.5px;color:var(--gold);padding:4px 0}
+.tm-sq summary .tm-sqpts{color:var(--mut);margin-left:7px}
+.tm-sec{margin-top:12px}
+.tm-sec .tm-hh{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.1em;color:var(--gold);margin-bottom:4px;text-transform:uppercase}
+.tm-combo{border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:8px 11px;margin-top:7px}
+.tm-combo .c1{display:flex;justify-content:space-between;gap:8px;align-items:baseline;flex-wrap:wrap}
+.tm-combo .c1 b{font-size:11.5px}
+.tm-combo .c2{font-family:'Space Mono',monospace;font-size:10px;color:var(--mut);margin-top:3px}
+#teammatch[hidden]{display:none}
 .fr-launch{padding:0 16px;margin:10px 0 2px}
 .fr-launch .btn{width:100%}
 .fr-cam{border-radius:12px;overflow:hidden;border:1px solid var(--line);margin-top:10px;background:#000}
@@ -2795,6 +2827,149 @@ function avSet(key,status){
     .catch(function(err){ toast(String(err.message||err)); avLoad(); });
 }
 function avName(v){ AV.name=v; try{ localStorage.setItem('rr_av_name',v); }catch(_){ } }
+/* ============================================================ */
+/* ---- SLAYERS MATCH RESULTS — EDIT HERE ----
+   One entry per completed stop, straight off the recap sheet.
+   Per bowler: n=name, avg=entering average, hcp=per-game handicap, g=[g1,g2,g3] (null = didn't bowl that game; list subs as their own row).
+   opp = opponent squad TOTALS per game, handicap included. Points are derived (2/game + 4 series), never stored. */
+var TEAM_MATCHES=[
+  {stop:'Stop 2', opp:'Hitmen', start:'2026-10-04', house:'Lucky Strike Durham',
+   squads:[
+    {sq:'Scratch', lanes:'25\u201326',
+     us:[{n:'Scott Murray',avg:218,hcp:0,g:[179,201,194]},
+         {n:'Jeffery Price',avg:220,hcp:0,g:[168,177,174]},
+         {n:'Gary McInerney',avg:220,hcp:0,g:[244,181,213]}],
+     opp:[732,676,672]},
+    {sq:'Handicap 1', lanes:'27\u201328',
+     us:[{n:'Tyler Rhodes',avg:213,hcp:21,g:[208,177,182]},
+         {n:'Alan Fincher',avg:213,hcp:21,g:[195,195,191]},
+         {n:'Matthew Antozzeski',avg:207,hcp:26,g:[168,179,190]}],
+     opp:[634,630,568]},
+    {sq:'Handicap 2', lanes:'29\u201330',
+     us:[{n:'Niya McLaurin',avg:162,hcp:62,g:[126,138,144]},
+         {n:'Keith Zielonka',avg:225,hcp:12,g:[210,203,213]},
+         {n:'Chad Styron',avg:209,hcp:24,g:[166,null,null]},
+         {n:'Antoine Johnson',avg:null,hcp:30,g:[null,157,166]}],
+     opp:[735,534,656]}
+   ]}
+];
+/* ---- match tracker: pure stat engines ---- */
+function tmSquad(sq){
+  var n=(sq.opp||[]).length||3, ourG=[], scrG=[], hcpG=[];
+  for(var gi=0;gi<n;gi++){
+    var scr=0,hc=0;
+    sq.us.forEach(function(b){ var v=(b.g||[])[gi]; if(v!=null){ scr+=v; hc+=(b.hcp||0); } });
+    scrG.push(scr); hcpG.push(hc); ourG.push(scr+hc);
+  }
+  var sum=function(t,v){return t+v;};
+  var ourTot=ourG.reduce(sum,0), oppTot=(sq.opp||[]).reduce(sum,0);
+  var pts=0, opts=0;
+  if(sq.opp){
+    ourG.forEach(function(t,i){ if(t>sq.opp[i])pts+=2; else if(t<sq.opp[i])opts+=2; else {pts+=1;opts+=1;} });
+    if(ourTot>oppTot)pts+=4; else if(ourTot<oppTot)opts+=4; else {pts+=2;opts+=2;}
+  }
+  return {ourG:ourG,scrG:scrG,hcpG:hcpG,ourTot:ourTot,oppTot:oppTot,pts:pts,opts:opts};
+}
+function tmMatch(m){
+  var pts=0,opts=0,pins=0,oppPins=0;
+  m.squads.forEach(function(sq){ var c=tmSquad(sq); pts+=c.pts; opts+=c.opts; pins+=c.ourTot; oppPins+=c.oppTot; });
+  /* 40-pt match: 10 per squad (2/game + 4 series) + 10 for overall total pinfall */
+  if(m.squads.length){ if(pins>oppPins)pts+=10; else if(pins<oppPins)opts+=10; else {pts+=5;opts+=5;} }
+  return {pts:pts,opts:opts,pins:pins,oppPins:oppPins,res:pts>opts?'W':(pts<opts?'L':'T')};
+}
+function tmFor(start){
+  for(var i=0;i<TEAM_MATCHES.length;i++) if(TEAM_MATCHES[i].start===start){ var t=tmMatch(TEAM_MATCHES[i]); return {res:t.res,us:t.pts,them:t.opts}; }
+  return null;
+}
+function tmAgg(){
+  var bowlers={}, houses={}, combos={};
+  TEAM_MATCHES.forEach(function(m){
+    m.squads.forEach(function(sq){
+      var c=tmSquad(sq);
+      var played=sq.us.filter(function(b){ return (b.g||[]).some(function(v){return v!=null;}); });
+      var ck=sq.sq+'|'+played.map(function(b){return b.n.toLowerCase();}).sort().join('|');
+      var co=combos[ck]||(combos[ck]={sq:sq.sq, names:played.map(function(b){return b.n;}), matches:0, pts:0, opts:0, pins:0, oppPins:0});
+      co.matches++; co.pts+=c.pts; co.opts+=c.opts; co.pins+=c.ourTot; co.oppPins+=c.oppTot;
+      sq.us.forEach(function(b){
+        (b.g||[]).forEach(function(v){
+          if(v==null)return;
+          var bk=b.n.toLowerCase();
+          var br=bowlers[bk]||(bowlers[bk]={name:b.n, n:0, tot:0, base:0, bn:0, hi:0, houses:{}});
+          br.n++; br.tot+=v; if(v>br.hi)br.hi=v;
+          if(b.avg!=null){ br.base+=b.avg; br.bn++; }
+          var hr=br.houses[m.house]||(br.houses[m.house]={n:0,tot:0,base:0,bn:0});
+          hr.n++; hr.tot+=v; if(b.avg!=null){ hr.base+=b.avg; hr.bn++; }
+          var ho=houses[m.house]||(houses[m.house]={});
+          ho[bk]=br;
+        });
+      });
+    });
+  });
+  var bl=Object.keys(bowlers).map(function(k){
+    var b=bowlers[k];
+    b.avgGame=b.tot/b.n;
+    b.delta=b.bn===b.n&&b.n?(b.tot-b.base)/b.n:null;
+    return b;
+  }).sort(function(a,b){ return (b.delta==null?-1e9:b.delta)-(a.delta==null?-1e9:a.delta); });
+  var cl=Object.keys(combos).map(function(k){return combos[k];}).sort(function(a,b){
+    return (b.pts/(b.pts+b.opts||1))-(a.pts/(a.pts+a.opts||1));
+  });
+  return {bowlers:bl, houses:houses, combos:cl};
+}
+/* ---- match tracker: renderer ---- */
+function tmD(v){ if(v==null)return '<span class="tm-ev">\u2014</span>'; var r=Math.round(v*10)/10, t=(r>0?'+':'')+r; return '<span class="'+(r>0?'tm-up':(r<0?'tm-dn':'tm-ev'))+'">'+t+'</span>'; }
+function teamMatchSync(){
+  var el=document.getElementById('teammatch'); if(!el)return;
+  if(window.CUR_THEME!=='slayers2'||!TEAM_MATCHES.length){ el.hidden=true; el.innerHTML=''; return; }
+  var V=window.TM_VIEW||'log';
+  var h='<div class="card-box ts-card"><div class="lbl">Match tracker \u00b7 results &amp; stats</div>';
+  h+='<div class="tm-views">'+[['log','Matches'],['bowl','Bowlers'],['house','By house'],['sq','Squads']].map(function(p){
+    return '<button class="chip mini" aria-pressed="'+(V===p[0])+'" onclick="window.TM_VIEW=\''+p[0]+'\';teamMatchSync()">'+p[1]+'</button>';
+  }).join('')+'</div>';
+  var A=tmAgg();
+  if(V==='log'){
+    TEAM_MATCHES.slice().sort(function(a,b){return a.start<b.start?1:-1;}).forEach(function(m){
+      var t=tmMatch(m), d=new Date(m.start+'T00:00:00');
+      h+='<div class="tm-match"><div class="tm-mh"><span class="ts-res '+(t.res==='W'?'w':'l')+'">'+t.res+' '+t.pts+'\u2013'+t.opts+'</span><b>'+esc(m.stop+' \u00b7 vs '+m.opp)+'</b><span class="ts-meta">'+esc(m.house)+' \u00b7 '+tsFmt(d)+' \u00b7 pinfall '+t.pins+'\u2013'+t.oppPins+(t.pins>t.oppPins?' (+10 pts)':(t.pins<t.oppPins?' (them +10)':''))+'</span></div>';
+      m.squads.forEach(function(sq){
+        var c=tmSquad(sq);
+        h+='<details class="tm-sq"><summary>'+esc(sq.sq)+(sq.lanes?(' \u00b7 lanes '+esc(sq.lanes)):'')+'<span class="tm-sqpts">'+c.pts+'\u2013'+c.opts+' pts \u00b7 '+(c.ourTot>c.oppTot?'+':'')+(c.ourTot-c.oppTot)+' pins</span></summary><div class="tm-scroll"><table class="tm-t"><tr><th>Bowler</th><th>Avg</th><th>Hcp</th>'+c.ourG.map(function(_,i){return '<th>G'+(i+1)+'</th>';}).join('')+'<th>Ser</th><th>\u00b1avg</th></tr>';
+        sq.us.forEach(function(b){
+          var gs=(b.g||[]), ser=0, gn=0;
+          gs.forEach(function(v){ if(v!=null){ser+=v;gn++;} });
+          var dl=(b.avg!=null&&gn)?(ser/gn-b.avg):null;
+          h+='<tr><td>'+esc(b.n)+'</td><td>'+(b.avg==null?'\u2014':b.avg)+'</td><td>'+(b.hcp||0)+'</td>'+gs.map(function(v){return '<td>'+(v==null?'\u2014':v)+'</td>';}).join('')+'<td>'+ser+'</td><td>'+tmD(dl)+'</td></tr>';
+        });
+        h+='<tr class="tm-tot"><td>Slayers (w/ hcp)</td><td></td><td>'+c.hcpG.join('/')+'</td>'+c.ourG.map(function(v){return '<td>'+v+'</td>';}).join('')+'<td>'+c.ourTot+'</td><td></td></tr>';
+        h+='<tr class="tm-opp"><td>'+esc(m.opp)+'</td><td></td><td></td>'+(sq.opp||[]).map(function(v){return '<td>'+v+'</td>';}).join('')+'<td>'+c.oppTot+'</td><td></td></tr>';
+        h+='</table></div></details>';
+      });
+      h+='</div>';
+    });
+  } else if(V==='bowl'){
+    h+='<div class="hint">Every game bowled in match play \u2014 sorted by performance against your own entering average.</div><div class="tm-scroll"><table class="tm-t"><tr><th>Bowler</th><th>G</th><th>Avg game</th><th>Enter</th><th>\u00b1avg</th><th>High</th></tr>';
+    A.bowlers.forEach(function(b){
+      h+='<tr><td>'+esc(b.name)+'</td><td>'+b.n+'</td><td>'+(Math.round(b.avgGame*10)/10)+'</td><td>'+(b.bn===b.n?Math.round(b.base/b.bn):'\u2014')+'</td><td>'+tmD(b.delta)+'</td><td>'+b.hi+'</td></tr>';
+    });
+    h+='</table></div>';
+  } else if(V==='house'){
+    Object.keys(A.houses).forEach(function(hs){
+      h+='<div class="tm-sec"><div class="tm-hh">'+esc(hs)+'</div><div class="tm-scroll"><table class="tm-t"><tr><th>Bowler</th><th>G</th><th>Avg here</th><th>\u00b1avg</th></tr>';
+      var rows=Object.keys(A.houses[hs]).map(function(k){ var b=A.houses[hs][k], r=b.houses[hs]; return {name:b.name, n:r.n, ag:r.tot/r.n, dl:(r.bn===r.n&&r.n)?(r.tot-r.base)/r.n:null}; })
+        .sort(function(a,b){ return (b.dl==null?-1e9:b.dl)-(a.dl==null?-1e9:a.dl); });
+      rows.forEach(function(r){ h+='<tr><td>'+esc(r.name)+'</td><td>'+r.n+'</td><td>'+(Math.round(r.ag*10)/10)+'</td><td>'+tmD(r.dl)+'</td></tr>'; });
+      h+='</table></div></div>';
+    });
+  } else {
+    h+='<div class="hint">Every 3-person unit that\u2019s taken the lanes together \u2014 points won and pin margin vs the other side.</div>';
+    A.combos.forEach(function(co){
+      var mg=co.pins-co.oppPins;
+      h+='<div class="tm-combo"><div class="c1"><b>'+esc(co.sq)+'</b><span class="ts-res '+(co.pts>co.opts?'w':'l')+'">'+co.pts+'\u2013'+co.opts+' pts</span></div><div class="c2">'+esc(co.names.join(' \u00b7 '))+'</div><div class="c2">'+co.matches+' match'+(co.matches===1?'':'es')+' \u00b7 '+(mg>0?'+':'')+mg+' pins vs opponents</div></div>';
+    });
+  }
+  h+='<div class="hint" style="margin-top:10px">Off the recap sheets \u2014 snap each stop\u2019s sheet and it goes in the books.</div></div>';
+  el.innerHTML=h; el.hidden=false;
+}
 /* ---- schedule sharing: .ics calendar file + share text (for the family calendar) ---- */
 function tsParseHour(name){
   var m=/(\d{1,2})\s*(AM|PM)/i.exec(name||''); if(!m)return 10;
@@ -2939,7 +3114,9 @@ function teamSchedSync(){
     var e=x.e, dates=tsFmt(x.sd)+(e.end&&e.end!==e.start?(' – '+tsFmt(x.ed)):'');
     var days=Math.ceil((x.sd-now)/86400000);
     var when=dim?'':(x.sd<=now&&x.ed>=now?'<span class="ts-now">HAPPENING NOW</span>':(days<=45?'<span class="ts-in">in '+days+' day'+(days===1?'':'s')+'</span>':''));
-    return '<div class="ts-row'+(dim?' past':'')+'"><div class="ts-l"><b>'+esc(e.name)+'</b><span class="ts-meta">'+esc((e.house?e.house+' · ':'')+(e.city||''))+'</span></div><div class="ts-r"><span class="ts-date">'+dates+'</span>'+(badge[e.type]||'')+when+'</div></div>';
+    var rs=dim?tmFor(e.start):null;
+    var resc=rs?'<span class="ts-res '+(rs.res==='W'?'w':'l')+'">'+rs.res+' '+rs.us+'\u2013'+rs.them+'</span>':'';
+    return '<div class="ts-row'+(dim?' past':'')+'"><div class="ts-l"><b>'+esc(e.name)+'</b><span class="ts-meta">'+esc((e.house?e.house+' · ':'')+(e.city||''))+'</span></div><div class="ts-r"><span class="ts-date">'+dates+'</span>'+(badge[e.type]||'')+resc+when+'</div></div>';
   }
   var h='<div class="card-box ts-card"><div class="lbl">Season schedule · SE Capital</div>';
   if(!up.length){
@@ -4008,12 +4185,25 @@ function statAgg(games){
 }
 /* per-ball ROI */
 function ballAgg(games){
+  /* per-frame attribution: each frame credits the ball that threw it (f.bl, else the game ball).
+     The game's SCORE counts toward its primary ball = most frames thrown. */
   var m={};
-  games.forEach(function(g){var nm=g.ball; if(!nm)return; if(!m[nm])m[nm]={n:0,sum:0,str:0,fr:0};
-    var sc=g.score||scoreGame(g.frames); m[nm].n++; m[nm].sum+=sc;
-    (g.frames||[]).slice(0,10).forEach(function(f){m[nm].fr++; if((f.b||[])[0]===10)m[nm].str++;}); });
+  function slot(nm){ return m[nm]||(m[nm]={n:0,sum:0,str:0,fr:0}); }
+  games.forEach(function(g){
+    var counts={};
+    (g.frames||[]).slice(0,10).forEach(function(f){
+      if(!f||!f.b||!f.b.length)return;
+      var nm=f.bl||g.ball; if(!nm)return;
+      var x=slot(nm); x.fr++; if((f.b||[])[0]===10)x.str++;
+      counts[nm]=(counts[nm]||0)+1;
+    });
+    var prim=null;
+    Object.keys(counts).forEach(function(nm){ if(prim==null||counts[nm]>counts[prim])prim=nm; });
+    if(prim==null&&g.ball&&(g.frames||[]).length)prim=g.ball;
+    if(prim){ var p=slot(prim); p.n++; p.sum+=(g.score||scoreGame(g.frames)); }
+  });
   return Object.keys(m).map(function(nm){var x=m[nm];
-    return {ball:nm,games:x.n,avg:Math.round(x.sum/x.n),strikePct:x.fr?Math.round(x.str/x.fr*100):0};})
+    return {ball:nm,games:x.n,avg:x.n?Math.round(x.sum/x.n):0,strikePct:x.fr?Math.round(x.str/x.fr*100):0,frames:x.fr};})
     .sort(function(a,b){return b.avg-a.avg;});
 }
 /* biggest lever toward goal */
@@ -4192,7 +4382,8 @@ function histSaveSimple(i){ var games=loadGames(), g=games[i]; if(!g)return;
   saveGames(games); if(g.house){S.lastHouse=g.house;save();}
   STH.edit=-1; renderStats(); }
 function openLoggerEdit(i){ var g=loadGames()[i]; if(!g)return;
-  LG={d:g.d||todayStr(),house:g.house||'',ball:g.ball||'',fr:9,sub:1,frames:JSON.parse(JSON.stringify(g.frames)),standing:[1,2,3,4,5,6,7,8,9,10],knocked:[],pk:false,done:true,adj:JSON.parse(JSON.stringify(g.adj||[])),netIn:0,cdyReset:99,motion:null,cdyRec:null,gameNo:1,editIdx:i};
+  LG={d:g.d||todayStr(),house:g.house||'',ball:g.ball||'',fr:9,sub:1,frames:JSON.parse(JSON.stringify(g.frames)),standing:[1,2,3,4,5,6,7,8,9,10],knocked:[],pk:false,done:true,adj:JSON.parse(JSON.stringify(g.adj||[])),netIn:0,cdyReset:99,motion:null,cdyRec:null,gameNo:1,editIdx:i,ft:null,tg:null};
+  (g.frames||[]).forEach(function(f){ if(f&&f.ft!=null)LG.ft=f.ft; if(f&&f.tg!=null)LG.tg=f.tg; });
   var t=document.getElementById('gsheet-title'); if(t)t.textContent='Edit game';
   document.getElementById('gscrim').classList.add('on'); document.getElementById('gsheet').classList.add('on'); renderLogger(); }
 
@@ -4834,7 +5025,7 @@ function frRender(){
 function openLogger(fresh){
   var d=S.lgDraft;
   if(!fresh&&d&&lgProgress(d)){ LG=d; LG.resumed=true; }
-  else { LG={d:todayStr(),house:S.lastHouse||sqLastHouse()||'',ball:(ballNames()[0]||''),fr:0,sub:1,frames:[],standing:[1,2,3,4,5,6,7,8,9,10],knocked:[],pk:false,done:false,adj:[],netIn:0,cdyReset:-1,motion:null,cdyRec:null,gameNo:1}; LG.gameNo=loadGames().filter(function(g){return g.d===LG.d&&(g.frames||[]).length;}).length+1; }
+  else { LG={d:todayStr(),house:S.lastHouse||sqLastHouse()||'',ball:(ballNames()[0]||''),fr:0,sub:1,frames:[],standing:[1,2,3,4,5,6,7,8,9,10],knocked:[],pk:false,done:false,adj:[],netIn:0,cdyReset:-1,motion:null,cdyRec:null,gameNo:1,ft:S.lastFt!=null?S.lastFt:null,tg:S.lastTg!=null?S.lastTg:null}; LG.gameNo=loadGames().filter(function(g){return g.d===LG.d&&(g.frames||[]).length;}).length+1; }
   var t=document.getElementById('gsheet-title'); if(t)t.textContent='Log a game'; document.getElementById('gscrim').classList.add('on'); document.getElementById('gsheet').classList.add('on'); renderLogger(); }
 function closeLogger(){ lgSaveDraft(); document.getElementById('gscrim').classList.remove('on'); document.getElementById('gsheet').classList.remove('on'); }
 function logTap(p){ if(LG.standing.indexOf(p)<0)return; var i=LG.knocked.indexOf(p); if(i>=0)LG.knocked.splice(i,1); else LG.knocked.push(p); renderLogger(); }
@@ -4845,6 +5036,10 @@ function logThrow(){
   var kc=LG.knocked.length, fr=LG.fr, tenth=(fr===9);
   var f=LG.frames[fr]||{b:[],lv:[],pk:false}; LG.frames[fr]=f; var sub=LG.sub;
   if(sub===1){
+    /* stamp the line as thrown: ball in hand + feet/target boards (mid-game changes stay attributed) */
+    if(LG.ball)f.bl=LG.ball;
+    if(LG.ft!=null&&LG.ft!=='')f.ft=+LG.ft;
+    if(LG.tg!=null&&LG.tg!=='')f.tg=+LG.tg;
     f.b=[kc];
     if(kc===10){ f.lv=[]; f.pk=true; if(tenth){ LG.sub='X2'; freshRack(); return; } advanceFrame(); return; }
     f.lv=LG.standing.filter(function(p){return LG.knocked.indexOf(p)<0;}); f.pk=isPocketDefault(f.lv);
@@ -4865,9 +5060,17 @@ function logUndo(){
   if(LG.fr>0){ LG.fr--; LG.sub=1; LG.frames[LG.fr]={b:[],lv:[],pk:false}; LG.standing=allPins(); LG.knocked=[]; renderLogger(); }
 }
 function finishGame(){ LG.done=true; renderLogger(); }
+function lgFrameOut(f){
+  var o={b:f.b,lv:f.lv,pk:!!f.pk};
+  if(f.bl)o.bl=f.bl;
+  if(f.ft!=null)o.ft=f.ft;
+  if(f.tg!=null)o.tg=f.tg;
+  return o;
+}
 function saveLoggedGame(){
   var g={d:LG.d, house:document.getElementById('lg-house').value||LG.house, ball:document.getElementById('lg-ball').value||LG.ball,
-    frames:LG.frames.map(function(f){return {b:f.b,lv:f.lv,pk:!!f.pk};})};
+    frames:LG.frames.map(lgFrameOut)};
+  if(LG.ft!=null)S.lastFt=LG.ft; if(LG.tg!=null)S.lastTg=LG.tg;
   if(LG.adj&&LG.adj.length)g.adj=LG.adj;
   g.score=scoreGame(g.frames);
   var games=loadGames();
@@ -4877,17 +5080,37 @@ function saveLoggedGame(){
   LG=null; STH.edit=-1;
   closeLogger(); renderStats();
 }
+function lgSetLine(k,v){ LG[k]=(v===''?null:+v); lgSaveDraft(); }
+/* walk frames, emit ball/line changes as they happened (pure) */
+function lgLineHistory(frames){
+  var out=[], pb=null, pf=null, pt=null;
+  (frames||[]).forEach(function(f,i){
+    if(!f||!f.b||!f.b.length)return;
+    var bits=[];
+    if(f.bl&&f.bl!==pb){ bits.push((pb==null?'\u25cf ':'\u21c4 ')+f.bl); pb=f.bl; }
+    if(f.ft!=null&&f.ft!==pf){ bits.push('feet '+(pf!=null?pf+'\u2192':'')+f.ft); pf=f.ft; }
+    if(f.tg!=null&&f.tg!==pt){ bits.push('target '+(pt!=null?pt+'\u2192':'')+f.tg); pt=f.tg; }
+    if(bits.length)out.push({fr:i+1, txt:bits.join(' \u00b7 ')});
+  });
+  return out;
+}
 function renderLogger(){
   var el=document.getElementById('gsheet-body'); if(!el)return;
   var fs=frameScores(LG.frames), h='';
   h+='<div class="lg-meta"><input id="lg-date" type="date" value="'+LG.d+'" onchange="LG.d=this.value;lgSaveDraft()"><input id="lg-house" list="lg-houses" placeholder="House" value="'+esc(LG.house)+'" oninput="LG.house=this.value">'
-    +'<datalist id="lg-houses">'+houseSuggest().map(function(x){return '<option value="'+esc(x)+'"></option>';}).join('')+'</datalist><select id="lg-ball" onchange="LG.ball=this.value;lgSaveDraft()">'+ballNames().map(function(n){return '<option'+(n===LG.ball?' selected':'')+'>'+esc(n)+'</option>';}).join('')+'<option value="">\u2014</option></select></div>';
+    +'<datalist id="lg-houses">'+houseSuggest().map(function(x){return '<option value="'+esc(x)+'"></option>';}).join('')+'</datalist><select id="lg-ball" onchange="LG.ball=this.value;lgSaveDraft();renderLogger()">'+ballNames().map(function(n){return '<option'+(n===LG.ball?' selected':'')+'>'+esc(n)+'</option>';}).join('')+'<option value="">\u2014</option></select></div>';
+  h+='<div class="lg-line"><span class="lg-qlab">Your line:</span>'
+    +'<label>Feet bd <input type="number" inputmode="decimal" min="1" max="39" step="0.5" placeholder="\u2014" value="'+(LG.ft!=null?LG.ft:'')+'" onchange="lgSetLine(\'ft\',this.value)"></label>'
+    +'<label>Target bd <input type="number" inputmode="decimal" min="1" max="39" step="0.5" placeholder="\u2014" value="'+(LG.tg!=null?LG.tg:'')+'" onchange="lgSetLine(\'tg\',this.value)"></label>'
+    +'<span class="lg-lhint">stamped on every frame \u2014 update when you move</span></div>';
   if(LG.resumed) h+='<div class="cdy watch">Picked up your game in progress \u2014 saved as a draft when you left. <button class="cdy-b x" style="margin-left:6px" onclick="lgDiscardDraft()">Start over</button></div>';
   // frame track
   h+='<div class="lg-track">';
   for(var i=0;i<10;i++){ var f=LG.frames[i], mk=frameMarks(f,i), cur=(i===LG.fr&&!LG.done);
     h+='<div class="lg-fr'+(cur?' cur':'')+'"><div class="lg-fn">'+(i+1)+'</div><div class="lg-mk">'+mk+'</div><div class="lg-cs">'+(fs[i]!=null?fs[i]:'')+'</div></div>'; }
   h+='</div>';
+  var lh=lgLineHistory(LG.frames);
+  if(lh.length)h+='<div class="lg-moves">'+lh.map(function(x){return '<span class="lg-mv">F'+x.fr+': '+esc(x.txt)+'</span>';}).join('')+'</div>';
   if(!LG.done)h+=caddyStrip();
   if(LG.done){
     h+=caddyRecapLine();
