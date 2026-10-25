@@ -2766,11 +2766,11 @@ var TEAM_ID='slayers';
  * (i.e. always, on the ubaslayers.com team site). Entries with an empty url
  * are hidden until you fill them in. */
 function tbStandingsUrl(){
-  /* Slayers = Southeast (Capital district). UBA slugs standings per season;
-   * the season rolls over in the fall, so from Oct 1 this automatically
-   * points at the new season's page (e.g. 2026-2027) with no edit needed. */
-  var d=new Date(), y=d.getFullYear(), start=(d.getMonth()+1>=10)?y:y-1;
-  return 'https://ubatoday.info/southeast-season-tour-standings-'+start+'-'+(start+1)+'/';
+  /* Slayers = Southeast (Capital district). UBA turned out to REUSE the
+   * old slug for the new season (the 2026-27 standings live at
+   * ...-2025-2026/, verified Oct 2026), so the computed Oct-1 rollover
+   * 404'd. PINNED to the real page — if UBA moves it, edit this line. */
+  return 'https://ubatoday.info/southeast-season-tour-standings-2025-2026/';
 }
 var TEAM_LINKS=[
   {label:'SE Tour Standings', url:tbStandingsUrl},
@@ -2778,7 +2778,7 @@ var TEAM_LINKS=[
   {label:'Underground Bowling', url:'https://undergroundbowling.com/'},
   {label:'Jersey Store (Bowlifi)', url:'https://uba.bowlifi.com/'},
   {label:'UBA Pro Shop', url:'https://ubaproshop.com/'},
-  {label:'UBA Calendar', url:'https://docs.google.com/spreadsheets/d/1acqqXLuoVvgBQEnCiFbYc_2UPwObtqQDyUx28L5oUqc/edit?usp=sharing'}
+  {label:'UBA Calendar', url:'https://ubatoday.info/calendar/'} /* all districts — UBA offers no SE-only filter; the Season Schedule card above is the Southeast view */
 ];
 /* ======================================================== */
 /* ============ SLAYERS SEASON SCHEDULE — EDIT HERE ============
@@ -3132,7 +3132,7 @@ function teamSchedSync(){
   if(past.length){
     h+='<details class="ts-past"><summary>Past events ('+past.length+')</summary>'+past.map(function(x){return row(x,true);}).join('')+'</details>';
   }
-  h+='<div class="zvl-cred">Source: <a href="https://docs.google.com/spreadsheets/d/1acqqXLuoVvgBQEnCiFbYc_2UPwObtqQDyUx28L5oUqc/edit?usp=sharing" target="_blank" rel="noopener">full UBA calendar</a></div></div>';
+  h+='<div class="zvl-cred">Southeast stops only · Source: <a href="https://ubatoday.info/calendar/" target="_blank" rel="noopener">full UBA calendar (all districts)</a></div></div>';
   el.innerHTML=h; el.hidden=false;
 }
 function teamBarSync(){
