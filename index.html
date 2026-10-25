@@ -2793,7 +2793,22 @@ var TEAM_LINKS=[
 var TEAM_SCHEDULE=[
   {name:'Stop 1 \u00b7 vs Immortals \u00b7 10AM', type:'district', start:'2026-09-13', house:'Lucky Strike Raleigh', city:'5501 Commercial Ave, Raleigh, NC'},
   {name:'Stop 2 \u00b7 vs Hitmen \u00b7 11AM', type:'district', start:'2026-10-04', house:'Lucky Strike Durham', city:'4508 Durham-Chapel Hill Blvd, Durham, NC'},
-  {name:'Stop 3 \u00b7 vs The Riot Squad \u00b7 11AM', type:'district', start:'2026-10-25', house:'Bowlarena', city:'433 Western Blvd, Jacksonville, NC'}
+  {name:'Stop 3 \u00b7 vs The Riot Squad \u00b7 11AM', type:'district', start:'2026-10-25', house:'Bowlarena', city:'433 Western Blvd, Jacksonville, NC'},
+  /* FULL SEASON from the official Capital 2026-27 grid (matchups script-verified,
+     Slayers = team #4). KEEP NAMES STABLE \u2014 avKey = date+name; renaming orphans RSVPs.
+     Split days: Slayers bowl ONLY session 4A on Nov 8 and ONLY session 12B on Apr 25
+     (the other session is other teams). Stops 8 & 11 are two-session bracket/pick'em
+     days (seeding decides the session), so one entry spans the day. */
+  {name:'Stop 4A \u00b7 vs Motion to Strike \u00b7 10AM', type:'district', start:'2026-11-08', house:'Rocky Mountain', city:'3250 N Church St, Rocky Mount, NC', dur:3},
+  {name:'Stop 5 \u00b7 Position Round \u00b7 10:30AM', type:'district', start:'2026-11-29', house:'Buffaloe South', city:'6701 Fayetteville Rd, Raleigh, NC 27603', dur:3},
+  {name:'Stop 6 \u00b7 vs Smash \u00b7 12PM', type:'district', start:'2026-12-13', house:'Triad Lanes', city:'21 Oak Branch Dr, Greensboro, NC 27407', dur:3},
+  {name:'Stop 7 \u00b7 vs Outkasts \u00b7 10AM', type:'district', start:'2027-01-10', house:'Rainbow Lanes', city:'850 NC 42, Clayton, NC 27520', dur:3},
+  {name:'Stop 8 \u00b7 Bracket Round \u00b7 10AM', type:'district', start:'2027-01-31', house:'Buffaloe Erwin', city:'100 W Jackson Blvd, Erwin, NC 28339', dur:6},
+  {name:'Stop 9 \u00b7 vs The Aftermath \u00b7 9:30AM', type:'district', start:'2027-02-28', house:'Buffaloe North', city:'5900 Oak Forest Dr, Raleigh, NC 27616', dur:3},
+  {name:'Stop 10 \u00b7 vs Insurgents \u00b7 11AM', type:'district', start:'2027-03-21', house:'Lucky Strike East Carolina', city:'700 Red Banks Rd, Greenville, NC 27858', dur:3},
+  {name:'Stop 11 \u00b7 Pick\u2019em Round \u00b7 10AM', type:'district', start:'2027-04-11', house:'Westview Lanes', city:'1700 Ward Blvd, Wilson, NC 27893', dur:6},
+  {name:'Stop 12B \u00b7 vs Phoenix Fire \u00b7 1PM', type:'district', start:'2027-04-25', house:'B&B Lanes', city:'3003 Fort Bragg Rd, Fayetteville, NC 28303', dur:3},
+  {name:'Stop 13 \u00b7 Position Round \u00b7 12PM', type:'district', start:'2027-05-16', house:'AMF All Star Lanes', city:'910 S. Holden Rd, Greensboro, NC 27407', dur:3}
 ];
 /* ============================================================ */
 /* ---- availability RSVPs: who's in for each stop (server = Squad api) ---- */
@@ -2972,22 +2987,24 @@ function teamMatchSync(){
 }
 /* ---- schedule sharing: .ics calendar file + share text (for the family calendar) ---- */
 function tsParseHour(name){
-  var m=/(\d{1,2})\s*(AM|PM)/i.exec(name||''); if(!m)return 10;
-  var h=(+m[1])%12; if(/pm/i.test(m[2]))h+=12; return h;
+  /* minutes-aware: '10AM' / '10:30AM' / '1 PM' -> {h,m} (default 10:00) */
+  var m=/(\d{1,2})(?::(\d{2}))?\s*(AM|PM)/i.exec(name||''); if(!m)return {h:10,m:0};
+  var h=(+m[1])%12; if(/pm/i.test(m[3]))h+=12; return {h:h, m:m[2]?+m[2]:0};
 }
+function tsHHMM(h,mn){ return (h<10?'0':'')+h+(mn<10?'0':'')+mn; }
 function tsIcsEsc(x){ return String(x==null?'':x).replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\n/g,'\\n'); }
 function tsMyStatus(e){ var a=avFor(avKey(e)); return a.mine==='yes'?'IN':(a.mine==='no'?'OUT':null); }
 function tsIcs(evs){
   var L=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Slayers//Revs and Reads//EN','CALSCALE:GREGORIAN','METHOD:PUBLISH'];
   evs.forEach(function(x){
-    var e=x.e, d=e.start.replace(/-/g,''), h=tsParseHour(e.name), hh=(h<10?'0':'')+h;
+    var e=x.e, d=e.start.replace(/-/g,''), t=tsParseHour(e.name), dur=e.dur||4;
     var st=tsMyStatus(e), who=(AV.name||'').trim();
     var desc='UBA Southeast Capital tour stop.'+(st&&who?(' '+who+' is marked '+st+'.'):'')+' Details: https://ubaslayers.com';
     L.push('BEGIN:VEVENT');
     L.push('UID:'+avKey(e)+'@ubaslayers.com');
     L.push('DTSTAMP:'+d+'T000000Z');
-    L.push('DTSTART:'+d+'T'+hh+'0000');
-    L.push('DTEND:'+d+'T'+((h+4<10?'0':'')+(h+4))+'0000');
+    L.push('DTSTART:'+d+'T'+tsHHMM(t.h,t.m)+'00');
+    L.push('DTEND:'+d+'T'+tsHHMM(t.h+dur,t.m)+'00');
     L.push('SUMMARY:'+tsIcsEsc('UBA \u00b7 Slayers \u00b7 '+e.name));
     L.push('LOCATION:'+tsIcsEsc((e.house?e.house+', ':'')+(e.city||'')));
     L.push('DESCRIPTION:'+tsIcsEsc(desc));
@@ -3014,13 +3031,12 @@ function tsShareText(evs){
   return lines.join('\n');
 }
 function tsGcalUrl(e){
-  var d=e.start.replace(/-/g,''), h=tsParseHour(e.name);
-  var hh=(h<10?'0':'')+h, he=((h+4)<10?'0':'')+(h+4);
+  var d=e.start.replace(/-/g,''), t=tsParseHour(e.name), dur=e.dur||4;
   var st=tsMyStatus(e), who=(AV.name||'').trim();
   var details='UBA Southeast Capital tour stop.'+(st&&who?(' '+who+' is marked '+st+'.'):'')+' Details: https://ubaslayers.com';
   return 'https://calendar.google.com/calendar/render?action=TEMPLATE'
     +'&text='+encodeURIComponent('UBA \u00b7 Slayers \u00b7 '+e.name)
-    +'&dates='+d+'T'+hh+'0000/'+d+'T'+he+'0000'
+    +'&dates='+d+'T'+tsHHMM(t.h,t.m)+'00/'+d+'T'+tsHHMM(t.h+dur,t.m)+'00'
     +'&location='+encodeURIComponent((e.house?e.house+', ':'')+(e.city||''))
     +'&details='+encodeURIComponent(details);
 }
