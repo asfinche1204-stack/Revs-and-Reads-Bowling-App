@@ -5084,6 +5084,7 @@ function lgFrameOut(f){
   return o;
 }
 function saveLoggedGame(){
+  LG.fixBall=null;
   var g={d:LG.d, house:document.getElementById('lg-house').value||LG.house, ball:document.getElementById('lg-ball').value||LG.ball,
     frames:LG.frames.map(lgFrameOut)};
   if(LG.ft!=null)S.lastFt=LG.ft; if(LG.tg!=null)S.lastTg=LG.tg;
@@ -5096,6 +5097,38 @@ function saveLoggedGame(){
   LG=null; STH.edit=-1;
   closeLogger(); renderStats();
 }
+/* ball picker changed: if earlier frames carry the OLD ball, offer to rewrite
+   just those (precise replace \u2014 deliberate mid-game switches to other balls stay).
+   Picking '\u2014' then applying = removes the tag. Caddy's Switched \u2713 sets LG.ball
+   directly and never prompts. */
+function lgFixCount(frames,from){
+  var n=0; (frames||[]).forEach(function(f){ if(f&&f.b&&f.b.length&&(f.bl||'')===(from||''))n++; });
+  return n;
+}
+function lgFixApplyTo(frames,from,to){
+  var n=0;
+  (frames||[]).forEach(function(f){
+    if(f&&f.b&&f.b.length&&(f.bl||'')===(from||'')){ if(to)f.bl=to; else delete f.bl; n++; }
+  });
+  return n;
+}
+function lgSetBall(v){
+  var old=LG.ball||''; LG.ball=v;
+  LG.fixBall=null;
+  if(old!==(v||'')){
+    var n=lgFixCount(LG.frames,old);
+    if(n)LG.fixBall={from:old,to:v||'',n:n};
+  }
+  lgSaveDraft(); renderLogger();
+}
+function lgFixBallApply(){
+  if(!LG.fixBall)return;
+  var n=lgFixApplyTo(LG.frames,LG.fixBall.from,LG.fixBall.to);
+  var to=LG.fixBall.to; LG.fixBall=null;
+  lgSaveDraft(); renderLogger();
+  toast(to?(n+' frame'+(n===1?'':'s')+' now credited to '+to):('Ball tag removed from '+n+' frame'+(n===1?'':'s')));
+}
+function lgFixBallSkip(){ LG.fixBall=null; lgSaveDraft(); renderLogger(); }
 function lgSetLine(k,v){ LG[k]=(v===''?null:+v); lgSaveDraft(); }
 /* walk frames, emit ball/line changes as they happened (pure) */
 function lgLineHistory(frames){
@@ -5114,7 +5147,7 @@ function renderLogger(){
   var el=document.getElementById('gsheet-body'); if(!el)return;
   var fs=frameScores(LG.frames), h='';
   h+='<div class="lg-meta"><input id="lg-date" type="date" value="'+LG.d+'" onchange="LG.d=this.value;lgSaveDraft()"><input id="lg-house" list="lg-houses" placeholder="House" value="'+esc(LG.house)+'" oninput="LG.house=this.value">'
-    +'<datalist id="lg-houses">'+houseSuggest().map(function(x){return '<option value="'+esc(x)+'"></option>';}).join('')+'</datalist><select id="lg-ball" onchange="LG.ball=this.value;lgSaveDraft();renderLogger()">'+ballNames().map(function(n){return '<option'+(n===LG.ball?' selected':'')+'>'+esc(n)+'</option>';}).join('')+'<option value="">\u2014</option></select></div>';
+    +'<datalist id="lg-houses">'+houseSuggest().map(function(x){return '<option value="'+esc(x)+'"></option>';}).join('')+'</datalist><select id="lg-ball" onchange="lgSetBall(this.value)">'+ballNames().map(function(n){return '<option'+(n===LG.ball?' selected':'')+'>'+esc(n)+'</option>';}).join('')+'<option value="">\u2014</option></select></div>';
   h+='<div class="lg-line"><span class="lg-qlab">Your line:</span>'
     +'<label>Feet bd <input type="number" inputmode="decimal" min="1" max="39" step="0.5" placeholder="\u2014" value="'+(LG.ft!=null?LG.ft:'')+'" onchange="lgSetLine(\'ft\',this.value)"></label>'
     +'<label>Target bd <input type="number" inputmode="decimal" min="1" max="39" step="0.5" placeholder="\u2014" value="'+(LG.tg!=null?LG.tg:'')+'" onchange="lgSetLine(\'tg\',this.value)"></label>'
@@ -5126,6 +5159,14 @@ function renderLogger(){
     h+='<div class="lg-fr'+(cur?' cur':'')+'"><div class="lg-fn">'+(i+1)+'</div><div class="lg-mk">'+mk+'</div><div class="lg-cs">'+(fs[i]!=null?fs[i]:'')+'</div></div>'; }
   h+='</div>';
   var lh=lgLineHistory(LG.frames);
+  if(LG.fixBall){
+    var fb=LG.fixBall, who=fb.from||'no ball tag', tgt=fb.to;
+    h+='<div class="cdy watch">'+(tgt
+      ?('Were you throwing <b>'+esc(tgt)+'</b> for the '+fb.n+' earlier frame'+(fb.n===1?'':'s')+' too ('+esc(who)+')?')
+      :('Remove the ball tag from '+fb.n+' earlier frame'+(fb.n===1?'':'s')+' ('+esc(who)+')?'))
+      +' <button class="cdy-b gold" onclick="lgFixBallApply()">\u2713 Yes \u2014 fix them</button>'
+      +'<button class="cdy-b x" onclick="lgFixBallSkip()">No \u2014 just from here on</button></div>';
+  }
   if(lh.length)h+='<div class="lg-moves">'+lh.map(function(x){return '<span class="lg-mv">F'+x.fr+': '+esc(x.txt)+'</span>';}).join('')+'</div>';
   if(!LG.done)h+=caddyStrip();
   if(LG.done){
