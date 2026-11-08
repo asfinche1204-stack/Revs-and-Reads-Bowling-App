@@ -176,6 +176,20 @@ tr.total td{font-weight:700;border-top:1px solid var(--line)}
 .trio dl{grid-column:2;display:flex;flex-wrap:wrap;gap:6px 22px;margin:10px 0 0;font-size:.84rem}
 .trio dt{color:var(--mut);display:inline}
 .trio dd{display:inline;margin:0 0 0 6px;font-weight:600}
+/* matchup rows */
+.mux{grid-column:2}
+.mu{margin-top:12px;border-top:1px solid var(--line)}
+.mur{display:grid;grid-template-columns:minmax(0,1fr) auto 56px 52px 56px;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid rgba(47,57,75,.6);font-size:.86rem}
+.mur .mw{min-width:0}
+.mur .mw small{display:block;color:var(--mut);font-size:.76rem;line-height:1.35;margin-top:1px}
+.mur .ms{font-weight:600;white-space:nowrap}
+.mur .mm{text-align:right;font:800 1.05rem/1 var(--disp)}
+.mur .mm.minus{font-weight:700}
+.mur .mg{text-align:right;color:var(--mut);white-space:nowrap}
+.mur .res{font-size:.9rem;padding:5px 7px;text-align:center}
+.hon li.duo{grid-template-columns:22px 1fr auto}
+.hon li.duo .mu{grid-column:2 / span 2;margin-top:6px}
+.tlog td .res{font-size:.9rem;padding:5px 8px}
 /* trio log */
 .tlog td.nm,.tlog th:nth-child(2){text-align:left}
 .tlog td.nm{white-space:normal;min-width:180px}
@@ -269,6 +283,8 @@ footer{border-top:1px solid var(--line);margin-top:20px;padding:22px 0 50px;colo
 footer b{color:var(--pin)}
 @media(max-width:560px){
   .wrap{padding:0 16px}
+  .mur{grid-template-columns:minmax(0,1fr) auto 44px 50px;gap:8px;font-size:.82rem}.mur .mg{display:none}
+  .mux{grid-column:1 / span 2}
   .sheet{grid-auto-columns:minmax(84px,1fr)}.fr{min-height:118px}.fr-pts{font-size:2.2rem}
   .heat td.h{padding:8px 2px;font-size:1.05rem}.heat td,.heat th{padding-left:5px;padding-right:5px}
   .brand img{height:36px}.brand span{font-size:1.15rem}
@@ -317,16 +333,16 @@ footer b{color:var(--pin)}
     </div>
   </section>
   <section class="view" id="v-squads" role="tabpanel" aria-labelledby="t-squads" hidden>
-    <div class="mod"><h2>Trios that click</h2><p class="note">The same three bowlers on one squad, in any slot, ranked by share of squad points won. Only trios that have won a series are listed.</p><div id="trios"></div></div>
+    <div class="mod"><h2>Trios that click</h2><p class="note">The same three bowlers on one squad, in any slot, ranked by share of squad points won. Each matchup shows the squad’s total against the squad it faced, handicap included, which is what decides the points. Only trios that have won a series are listed.</p><div id="trios"></div></div>
     <div class="grid2 even">
-      <div class="mod"><h2>Duo chemistry</h2><p class="note">How often two regulars win when they share a squad. Gold cells won half or more of the squad points together.</p><div id="chem"></div></div>
-      <div class="mod"><h2>Duos that travel</h2><p class="note">Pairs who have shared a squad at two or more stops.</p><div id="travel"></div></div>
+      <div class="mod"><h2>Duo chemistry</h2><p class="note">Share of squad points won when two regulars bowl together. Gold cells won half or more. Tap or hover a cell for the points and pin margin.</p><div id="chem"></div></div>
+      <div class="mod"><h2>Duos that travel</h2><p class="note">Pairs who have shared a squad at two or more stops, with points won and every matchup they bowled together.</p><div id="travel"></div></div>
     </div>
-    <div class="mod"><h2>Every trio against its average</h2><p class="note">Pins over or under each trio’s combined entering average for the series. Entering average is what sets the handicap.</p><div class="scroll" id="triolog"></div></div>
+    <div class="mod"><h2>Every trio’s matchup</h2><p class="note">Each squad’s three-game total against the squad it faced, handicap included. Margin is the pin difference for the series; game margins sit under the names.</p><div class="scroll" id="triolog"></div></div>
   </section>
   <section class="view" id="v-bowlers" role="tabpanel" aria-labelledby="t-bowlers" hidden>
     <div class="mod"><h2>Season leaders</h2><p class="note">Match play only. Tap a column to sort.</p><div class="scroll" id="leaders"></div></div>
-    <div class="mod"><h2>Everyone against their average</h2><p class="note">Each frame is one stop: pins over or under entering average for the series, the series itself, and the squad in the corner box. The last column is pins per game across the season, with the season total underneath. Subs who bowled part of a series are measured on the games they bowled.</p><div class="scroll" id="grid"></div></div>
+    <div class="mod"><h2>Everyone against their average</h2><p class="note">Each frame is one stop. The big number is pins over or under their average for the series (+47 means 47 more pins than three games at their average), the series itself, and the squad in the corner box. The last column is pins per game across the season, with the season total underneath. Subs who bowled part of a series are measured on the games they bowled.</p><div class="scroll" id="grid"></div></div>
     <div class="grid2 even">
       <div class="mod"><h2>High games</h2><ol class="hon" id="hg"></ol></div>
       <div class="mod"><h2>High series</h2><ol class="hon" id="hs"></ol></div>
@@ -602,14 +618,17 @@ function sqRows(ms){
   });});
   return out;
 }
+/* the head-to-head: our squad (handicap in, as scored) against the squad we faced */
+function matchup(x){ var o=x.sq.opp||[]; return {stop:x.m.stop, opp:x.m.opp, sq:x.sq.sq, us:x.c.ourTot, them:x.c.oppTot, mg:x.c.ourTot-x.c.oppTot, gw:x.gw, pts:x.c.pts, opts:x.c.opts, gm:x.c.ourG.map(function(v,i){ return v-(o[i]||0); })}; }
 function pointSources(ms){ return ms.map(function(m){ var r=tmMatch(m); return {m:m, cells:m.squads.map(function(sq){ return tmSquad(sq).pts; }).concat([r.pins>r.oppPins?10:0])}; }); }
 function trios(ord){
   var T={};
   sqRows(ord).forEach(function(x){
     var names=x.played.map(function(b){return b.n;}), key=names.map(function(n){return n.toLowerCase();}).sort().join('|');
-    var t=T[key]||(T[key]={names:names, slots:[], stops:[], n:0, pts:0, av:0, gw:0, gn:0, sw:0, scr:0, best:null, spr:0, sprs:[]});
+    var t=T[key]||(T[key]={names:names, slots:[], stops:[], n:0, pts:0, av:0, gw:0, gn:0, sw:0, scr:0, best:null, spr:0, sprs:[], mg:0, mu:[]});
     if(t.slots.indexOf(x.sq.sq)<0)t.slots.push(x.sq.sq);
     t.stops.push(x.m.stop); if(x.spr!=null){t.spr+=x.spr; t.sprs.push({stop:x.m.stop,v:x.spr});}
+    t.mg+=x.c.ourTot-x.c.oppTot; t.mu.push(matchup(x));
     t.n++; t.pts+=x.c.pts; t.av+=10; t.gw+=x.gw; t.gn+=3; t.sw+=x.sw?1:0; t.scr+=x.scrAvg;
     if(!t.best||x.c.pts>t.best.pts||(x.c.pts===t.best.pts&&x.c.ourTot-x.c.oppTot>t.best.mg))t.best={pts:x.c.pts, opts:x.c.opts, stop:x.m.stop, mg:x.c.ourTot-x.c.oppTot};
   });
@@ -625,7 +644,8 @@ function pairs(ord){
       var a=x.played[i], b=x.played[j], ga=a.g||[], gb=b.g||[];
       if(![0,1,2].some(function(g){ return ga[g]!=null&&gb[g]!=null; }))continue;
       var ka=a.n.toLowerCase(), kb=b.n.toLowerCase(), key=[ka,kb].sort().join('|');
-      var p=P[key]||(P[key]={a:ka<kb?a.n:b.n, b:ka<kb?b.n:a.n, n:0, pts:0, av:0, sw:0, gw:0, gn:0});
+      var p=P[key]||(P[key]={a:ka<kb?a.n:b.n, b:ka<kb?b.n:a.n, n:0, pts:0, av:0, sw:0, gw:0, gn:0, mg:0, mu:[]});
+      p.mg+=x.c.ourTot-x.c.oppTot; p.mu.push(matchup(x));
       p.n++; p.pts+=x.c.pts; p.av+=10; p.sw+=x.sw?1:0; p.gw+=x.gw; p.gn+=3;
     }
   });
@@ -762,6 +782,13 @@ function bounceHTML(ord){
 }
 
 /* ---------- squads ---------- */
+function muRows(list){
+  return '<div class="mu">'+list.map(function(u){
+    return '<div class="mur"><span class="mw">'+esc(u.stop)+' <span class="muted">vs</span> '+esc(u.opp)+'<small>'+esc(u.sq)+', games '+u.gm.map(sgn).join(', ')+'</small></span>'
+      +'<span class="ms">'+u.us+'<span class="muted">–'+u.them+'</span></span><span class="mm '+spCls(u.mg)+'">'+sgn(u.mg)+'</span>'
+      +'<span class="mg">'+u.gw+' of 3</span><span class="res'+(u.pts>u.opts?' w':'')+'">'+u.pts+'–'+u.opts+'</span></div>';
+  }).join('')+'</div>';
+}
 function triosHTML(ord){
   var L=trios(ord);
   if(!L.length)return '<p class="muted">Trios show up here once a squad wins its series.</p>';
@@ -770,17 +797,19 @@ function triosHTML(ord){
       +'<div class="nm">'+t.names.map(esc).join(', ')+'</div>'
       +'<div class="tg">'+(t.n>1?'<span class="tag g">Together '+t.n+' times</span>':'')+t.slots.map(function(s){return '<span class="tag">'+esc(s)+'</span>';}).join('')+t.stops.map(function(s){return '<span class="tag">'+esc(s)+'</span>';}).join('')+'</div>'
       +'<div class="mt"><span class="tr"><i style="--w:'+(t.share*100).toFixed(1)+'%"></i></span><b>'+t.pts+' of '+t.av+' pts</b></div></div>'
-      +'<dl><div><dt>Games won</dt><dd>'+t.gw+' of '+t.gn+'</dd></div><div><dt>Best night</dt><dd>'+t.best.pts+'–'+t.best.opts+', '+esc(t.best.stop)+(t.best.mg>0?' (+'+t.best.mg+' pins)':'')+'</dd></div><div><dt>Team scratch game</dt><dd>'+Math.round(t.scr)+'</dd></div><div><dt>Against average</dt><dd class="'+spCls(t.spr)+'">'+sgn(t.spr)+(t.sprs.length>1?' <span class="muted" style="font-weight:400">('+t.sprs.map(function(z){return esc(z.stop.replace('Stop ',''))+': '+sgn(z.v);}).join(', ')+')</span>':'')+'</dd></div></dl></div>';
+      +'<dl><div><dt>Series won</dt><dd>'+t.sw+' of '+t.n+'</dd></div><div><dt>Games won</dt><dd>'+t.gw+' of '+t.gn+'</dd></div><div><dt>Pins against opponents</dt><dd class="'+spCls(t.mg)+'">'+sgn(t.mg)+'</dd></div><div><dt>Team scratch game</dt><dd>'+Math.round(t.scr)+'</dd></div></dl>'
+      +'<div class="mux">'+muRows(t.mu)+'</div></div>';
   }).join('');
 }
 function trioLogHTML(ord){
-  var R=sqRows(ord), h='<table class="tlog"><thead><tr><th>Squad</th><th>Trio and each bowler against average</th><th>Points</th><th>Trio</th></tr></thead><tbody>';
+  var R=sqRows(ord), h='<table class="tlog"><thead><tr><th>Squad</th><th>Trio</th><th>Score</th><th>Margin</th><th>Games</th><th>Points</th></tr></thead><tbody>';
   ord.slice().reverse().forEach(function(m){
-    h+='<tr class="grp"><td colspan="4">'+esc(m.stop)+', '+esc(m.house)+'</td></tr>';
+    h+='<tr class="grp"><td colspan="6">'+esc(m.stop)+' against '+esc(m.opp)+', '+esc(m.house)+'</td></tr>';
     R.filter(function(x){return x.m===m;}).forEach(function(x){
+      var u=matchup(x);
       h+='<tr class="tlr"><td class="sq">'+esc(slotA(x.sq.sq))+'</td><td class="nm">'+x.played.map(function(b){return esc(first(b.n));}).join(', ')
-        +'<small>'+x.played.map(function(b){ var v=spreadOf(b); return v==null?'':esc(first(b.n))+' '+sgn(v); }).filter(Boolean).join(', ')+'</small></td>'
-        +'<td>'+x.c.pts+'</td><td class="v '+(x.spr==null?'':spCls(x.spr))+'">'+(x.spr==null?'—':sgn(x.spr))+'</td></tr>';
+        +'<small>Games '+u.gm.map(sgn).join(', ')+'</small></td>'
+        +'<td>'+u.us+'<span class="muted">–'+u.them+'</span></td><td class="v '+spCls(u.mg)+'">'+sgn(u.mg)+'</td><td>'+u.gw+' of 3</td><td><span class="res'+(u.pts>u.opts?' w':'')+'">'+u.pts+'–'+u.opts+'</span></td></tr>';
     });
   });
   return h+'</tbody></table>';
@@ -799,7 +828,7 @@ function chemHTML(ord){
       var p=D.pairs[[r.k,c.k].sort().join('|')];
       if(!p){ h+='<div class="cc x" title="'+esc(r.n+' and '+c.n+' have not shared a squad yet')+'"></div>'; return; }
       var sh=p.pts/p.av;
-      if(sh>=.5){ var a=Math.min(1,(sh-.5)*1.6+.3); h+='<div class="cc g'+(a<.55?' lt':'')+'" style="--a:'+a.toFixed(2)+'" title="'+esc(r.n+' and '+c.n+': '+p.pts+' of '+p.av+' squad points together')+'">'+Math.round(sh*100)+'</div>'; }
+      if(sh>=.5){ var a=Math.min(1,(sh-.5)*1.6+.3); h+='<div class="cc g'+(a<.55?' lt':'')+'" style="--a:'+a.toFixed(2)+'" title="'+esc(r.n+' and '+c.n+': '+p.pts+'–'+(p.av-p.pts)+' in points, '+sgn(p.mg)+' pins against opponents')+'">'+Math.round(sh*100)+'</div>'; }
       else h+='<div class="cc t" title="'+esc(r.n+' and '+c.n+' have shared a squad')+'"></div>';
     });
   });
@@ -809,7 +838,7 @@ function travelHTML(ord){
   var D=pairs(ord), T=Object.keys(D.pairs).map(function(k){ return D.pairs[k]; }).filter(function(p){ return p.n>=2&&p.pts/p.av>=.5; })
     .sort(function(a,b){ return (b.pts/b.av-a.pts/a.av)||(b.n-a.n); });
   if(!T.length)return '<p class="muted">Pairs show up here once they’ve shared a squad at two stops.</p>';
-  return '<ol class="hon">'+T.map(function(p){ return '<li><span>'+esc(first(p.a))+' and '+esc(first(p.b))+'<small>'+p.n+' stops, '+p.pts+' of '+p.av+' points, '+p.gw+' of '+p.gn+' games</small></span><b>'+Math.round(p.pts/p.av*100)+'%</b></li>'; }).join('')+'</ol>';
+  return '<ol class="hon">'+T.map(function(p){ return '<li class="duo"><span>'+esc(first(p.a))+' and '+esc(first(p.b))+'<small>Series '+p.sw+'–'+(p.n-p.sw)+', games '+p.gw+' of '+p.gn+', <span class="'+spCls(p.mg)+'">'+sgn(p.mg)+' pins</span> against opponents</small></span><b>'+p.pts+'–'+(p.av-p.pts)+'</b>'+muRows(p.mu)+'</li>'; }).join('')+'</ol>';
 }
 
 /* ---------- bowlers ---------- */
@@ -824,7 +853,7 @@ function leaderRows(ord){
 }
 function leadersHTML(ord){
   var rows=leaderRows(ord).sort(function(a,b){ var x=a[SORT.k], y=b[SORT.k]; if(x==null)return 1; if(y==null)return -1; if(typeof x==='string')return SORT.dir*(x<y?-1:x>y?1:0); return SORT.dir*(x-y); });
-  var cols=[['name','Bowler'],['stops','Stops'],['n','Games'],['avg','Average'],['hi','High game'],['ser','High series'],['c200','200+'],['vs','Against avg / game']];
+  var cols=[['name','Bowler'],['stops','Stops'],['n','Games'],['avg','Average'],['hi','High game'],['ser','High series'],['c200','200+'],['vs','Pins vs avg, per game']];
   var h='<table class="lead-t"><thead><tr>'+cols.map(function(c){ return '<th'+(SORT.k===c[0]?' aria-sort="'+(SORT.dir<0?'descending':'ascending')+'"':'')+'><button data-k="'+c[0]+'">'+c[1]+'</button></th>'; }).join('')+'</tr></thead><tbody>';
   rows.forEach(function(r){
     h+='<tr'+(r.n<3?' class="few"':'')+'><td>'+esc(r.name)+'</td><td>'+r.stops+'</td><td>'+r.n+'</td><td class="avg">'+r.avg.toFixed(1)+'</td><td>'+r.hi+'</td><td>'+(r.ser||'—')+'</td><td>'+r.c200+'</td><td class="'+(r.vs==null?'muted':spCls(r.vs))+'">'+(r.vs==null?'—':sgn(r.vs))+'</td></tr>';
