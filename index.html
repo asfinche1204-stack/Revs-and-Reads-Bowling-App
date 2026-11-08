@@ -2773,6 +2773,7 @@ function tbStandingsUrl(){
   return 'https://ubatoday.info/southeast-season-tour-standings-2025-2026/';
 }
 var TEAM_LINKS=[
+  {label:'Slayers Stats & Recaps', url:'https://ubaslayers.com/stats.html'},
   {label:'SE Tour Standings', url:tbStandingsUrl},
   {label:'UBA Today (news)', url:'https://ubatoday.info/'},
   {label:'Underground Bowling', url:'https://undergroundbowling.com/'},
@@ -2799,7 +2800,7 @@ var TEAM_SCHEDULE=[
      Split days: Slayers bowl ONLY session 4A on Nov 8 and ONLY session 12B on Apr 25
      (the other session is other teams). Stops 8 & 11 are two-session bracket/pick'em
      days (seeding decides the session), so one entry spans the day. */
-  {name:'Stop 4A \u00b7 vs Motion to Strike \u00b7 10AM', type:'district', start:'2026-11-08', house:'Rocky Mountain', city:'3250 N Church St, Rocky Mount, NC', dur:3},
+  {name:'Stop 4A \u00b7 vs Motion to Strike \u00b7 10AM', type:'district', start:'2026-11-08', house:'Rocky Mount', city:'3250 N Church St, Rocky Mount, NC', dur:3},
   {name:'Stop 5 \u00b7 Position Round \u00b7 10:30AM', type:'district', start:'2026-11-29', house:'Buffaloe South', city:'6701 Fayetteville Rd, Raleigh, NC 27603', dur:3},
   {name:'Stop 6 \u00b7 vs Smash \u00b7 12PM', type:'district', start:'2026-12-13', house:'Triad Lanes', city:'21 Oak Branch Dr, Greensboro, NC 27407', dur:3},
   {name:'Stop 7 \u00b7 vs Outkasts \u00b7 10AM', type:'district', start:'2027-01-10', house:'Rainbow Lanes', city:'850 NC 42, Clayton, NC 27520', dur:3},
@@ -2845,27 +2846,82 @@ function avName(v){ AV.name=v; try{ localStorage.setItem('rr_av_name',v); }catch
 /* ============================================================ */
 /* ---- SLAYERS MATCH RESULTS — EDIT HERE ----
    One entry per completed stop, straight off the recap sheet.
+   Squads in SHEET ORDER: Scratch, Handicap 1, Handicap 2 (top to bottom on the recap sheet — trios move between slots stop to stop).
    Per bowler: n=name, avg=entering average, hcp=per-game handicap, g=[g1,g2,g3] (null = didn't bowl that game; list subs as their own row).
    opp = opponent squad TOTALS per game, handicap included. Points are derived (2/game + 4 series), never stored. */
 var TEAM_MATCHES=[
-  {stop:'Stop 2', opp:'Hitmen', start:'2026-10-04', house:'Lucky Strike Durham',
+  {stop:"Stop 1", opp:"Immortals", start:'2026-09-13', house:"Lucky Strike Raleigh",
    squads:[
-    {sq:'Scratch', lanes:'25\u201326',
-     us:[{n:'Scott Murray',avg:218,hcp:0,g:[179,201,194]},
-         {n:'Jeffery Price',avg:220,hcp:0,g:[168,177,174]},
-         {n:'Gary McInerney',avg:220,hcp:0,g:[244,181,213]}],
+    {sq:'Scratch', lanes:'7–8',
+     us:[{n:"Thomas Bernard Clark Jr.",avg:240,hcp:0,g:[171,180,187]},
+         {n:"Jeffery Price",avg:220,hcp:0,g:[205,177,200]},
+         {n:"Gary McInerney",avg:220,hcp:0,g:[200,211,259]}],
+     opp:[627,726,719]},
+    {sq:'Handicap 1', lanes:'9–10',
+     us:[{n:"Tyler Rhodes",avg:213,hcp:21,g:[169,243,235]},
+         {n:"Alan Fincher",avg:213,hcp:21,g:[193,239,254]},
+         {n:"Scott Murray",avg:218,hcp:17,g:[204,201,203]}],
+     opp:[687,747,741]},
+    {sq:'Handicap 2', lanes:'11–12',
+     us:[{n:"Timothy Brown",avg:200,hcp:32,g:[245,150,148]},
+         {n:"Matthew Antozzeski",avg:207,hcp:26,g:[207,219,212]},
+         {n:"Antoine Johnson",avg:202,hcp:30,g:[197,188,234]}],
+     opp:[674,673,624]}
+   ]},
+  {stop:"Stop 2", opp:"Hitmen", start:'2026-10-04', house:"Lucky Strike Durham",
+   squads:[
+    {sq:'Scratch', lanes:'25–26',
+     us:[{n:"Scott Murray",avg:218,hcp:0,g:[179,201,194]},
+         {n:"Jeffery Price",avg:220,hcp:0,g:[168,177,174]},
+         {n:"Gary McInerney",avg:220,hcp:0,g:[244,181,213]}],
      opp:[732,676,672]},
-    {sq:'Handicap 1', lanes:'27\u201328',
-     us:[{n:'Tyler Rhodes',avg:213,hcp:21,g:[208,177,182]},
-         {n:'Alan Fincher',avg:213,hcp:21,g:[195,195,191]},
-         {n:'Matthew Antozzeski',avg:207,hcp:26,g:[168,179,190]}],
+    {sq:'Handicap 1', lanes:'27–28',
+     us:[{n:"Tyler Rhodes",avg:213,hcp:21,g:[208,177,182]},
+         {n:"Alan Fincher",avg:213,hcp:21,g:[195,195,191]},
+         {n:"Matthew Antozzeski",avg:207,hcp:26,g:[168,179,190]}],
      opp:[634,630,568]},
-    {sq:'Handicap 2', lanes:'29\u201330',
-     us:[{n:'Niya McLaurin',avg:162,hcp:62,g:[126,138,144]},
-         {n:'Keith Zielonka',avg:225,hcp:12,g:[210,203,213]},
-         {n:'Chad Styron',avg:209,hcp:24,g:[166,null,null]},
-         {n:'Antoine Johnson',avg:null,hcp:30,g:[null,157,166]}],
+    {sq:'Handicap 2', lanes:'29–30',
+     us:[{n:"Niya McLaurin",avg:162,hcp:62,g:[126,138,144]},
+         {n:"Keith Zielonka",avg:225,hcp:12,g:[210,203,213]},
+         {n:"Chad Styron",avg:209,hcp:24,g:[166,null,null]},
+         {n:"Antoine Johnson",avg:202,hcp:30,g:[null,157,166]}],
      opp:[735,534,656]}
+   ]},
+  {stop:"Stop 3", opp:"The Riot Squad", start:'2026-10-25', house:"Bowlarena",
+   squads:[
+    {sq:'Scratch', lanes:'1–2',
+     us:[{n:"Gary McInerney",avg:220,hcp:0,g:[165,266,223]},
+         {n:"Scott Murray",avg:218,hcp:0,g:[184,237,177]},
+         {n:"Daniel McCaskill",avg:222,hcp:0,g:[177,218,247]}],
+     opp:[647,681,687]},
+    {sq:'Handicap 1', lanes:'3–4',
+     us:[{n:"Alan Fincher",avg:213,hcp:21,g:[187,204,228]},
+         {n:"Antoine Johnson",avg:201,hcp:31,g:[241,243,212]},
+         {n:"Keith Zielonka",avg:225,hcp:12,g:[178,237,167]}],
+     opp:[834,629,704]},
+    {sq:'Handicap 2', lanes:'5–6',
+     us:[{n:"Brenda Clark",avg:170,hcp:56,g:[122,139,114]},
+         {n:"Tyler Rhodes",avg:213,hcp:21,g:[183,147,170]},
+         {n:"Thomas Bernard Clark Jr.",avg:224,hcp:12,g:[157,155,153]}],
+     opp:[636,750,608]}
+   ]},
+  {stop:"Stop 4A", opp:"Motion to Strike", start:'2026-11-08', house:"Rocky Mount",
+   squads:[
+    {sq:'Scratch', lanes:'7–8',
+     us:[{n:"Thomas Bernard Clark Jr.",avg:224,hcp:0,g:[178,220,186]},
+         {n:"Jeffery Price",avg:220,hcp:0,g:[215,213,234]},
+         {n:"Gary McInerney",avg:220,hcp:0,g:[189,225,234]}],
+     opp:[571,620,696]},
+    {sq:'Handicap 1', lanes:'9–10',
+     us:[{n:"Niya McLaurin",avg:162,hcp:62,g:[156,165,130]},
+         {n:"Antoine Johnson",avg:201,hcp:31,g:[211,187,215]},
+         {n:"Keith Zielonka",avg:225,hcp:12,g:[190,213,218]}],
+     opp:[574,721,665]},
+    {sq:'Handicap 2', lanes:'11–12',
+     us:[{n:"Alan Fincher",avg:213,hcp:21,g:[166,215,181]},
+         {n:"Tyler Rhodes",avg:213,hcp:21,g:[243,217,178]},
+         {n:"Matthew Antozzeski",avg:207,hcp:26,g:[194,194,227]}],
+     opp:[684,583,603]}
    ]}
 ];
 /* ---- match tracker: pure stat engines ---- */
@@ -2902,8 +2958,10 @@ function tmAgg(){
     m.squads.forEach(function(sq){
       var c=tmSquad(sq);
       var played=sq.us.filter(function(b){ return (b.g||[]).some(function(v){return v!=null;}); });
-      var ck=sq.sq+'|'+played.map(function(b){return b.n.toLowerCase();}).sort().join('|');
-      var co=combos[ck]||(combos[ck]={sq:sq.sq, names:played.map(function(b){return b.n;}), matches:0, pts:0, opts:0, pins:0, oppPins:0});
+      /* chemistry = the same PEOPLE together, whatever slot the sheet put them in (slots move stop to stop) */
+      var ck=played.map(function(b){return b.n.toLowerCase();}).sort().join('|');
+      var co=combos[ck]||(combos[ck]={sq:sq.sq, slots:[], names:played.map(function(b){return b.n;}), matches:0, pts:0, opts:0, pins:0, oppPins:0});
+      if(co.slots.indexOf(sq.sq)<0){ co.slots.push(sq.sq); co.sq=co.slots.join(' / '); }
       co.matches++; co.pts+=c.pts; co.opts+=c.opts; co.pins+=c.ourTot; co.oppPins+=c.oppTot;
       sq.us.forEach(function(b){
         (b.g||[]).forEach(function(v){
@@ -2927,7 +2985,7 @@ function tmAgg(){
     return b;
   }).sort(function(a,b){ return (b.delta==null?-1e9:b.delta)-(a.delta==null?-1e9:a.delta); });
   var cl=Object.keys(combos).map(function(k){return combos[k];}).sort(function(a,b){
-    return (b.pts/(b.pts+b.opts||1))-(a.pts/(a.pts+a.opts||1));
+    return (b.pts/(b.pts+b.opts||1))-(a.pts/(a.pts+a.opts||1)) || (b.matches-a.matches) || ((b.pins-b.oppPins)-(a.pins-a.oppPins));
   });
   return {bowlers:bl, houses:houses, combos:cl};
 }

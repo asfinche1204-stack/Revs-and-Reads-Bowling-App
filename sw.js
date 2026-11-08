@@ -1,5 +1,5 @@
 /* Revs & Reads service worker — network-first shell, cache as offline fallback */
-var CACHE='slayers-cache-v30';
+var CACHE='slayers-cache-v35';
 var CORE=['./','./index.html','./manifest.webmanifest'];
 self.addEventListener('install',function(e){
   /* best-effort precache: a missing asset must NOT fail install, or the old worker never steps aside */
@@ -21,12 +21,18 @@ self.addEventListener('fetch',function(e){
   if(e.request.method!=='GET')return;
   var req=e.request;
   try{ if(new URL(req.url).origin!==self.location.origin) return; }catch(_){}
-  var isDoc = req.mode==='navigate' || (req.headers.get('accept')||'').indexOf('text/html')>-1;
+  var path=''; try{ path=new URL(req.url).pathname; }catch(_){}
+  /* pages AND page-file fetches (leaders/stats pages read index.html for live data) go network-first */
+  var isDoc = req.mode==='navigate' || (req.headers.get('accept')||'').indexOf('text/html')>-1 || /(\.html|\/)$/.test(path);
   if(isDoc){
-    /* network-first: always try the latest page when online; fall back to cache offline */
     e.respondWith(
       fetch(req).then(function(resp){
-        try{var cp=resp.clone();caches.open(CACHE).then(function(c){c.put('./index.html',cp);});}catch(_){}
+        try{
+          var cp=resp.clone(), scope=new URL(self.registration.scope).pathname;
+          var isShell = path===scope || path===scope+'index.html';
+          /* each page is cached under its OWN url; only the app shell refreshes ./index.html */
+          caches.open(CACHE).then(function(c){ c.put(isShell?'./index.html':req, cp); });
+        }catch(_){}
         return resp;
       }).catch(function(){
         return caches.match(req).then(function(h){return h||caches.match('./index.html');});
